@@ -28,6 +28,18 @@ app.get('/api/persons',(request,response) => {
     response.json(persons)
 })
 
+app.get('/info', (request,response) => {
+  const date = new Date();  
+  let options = {  
+    weekday: "long", year: "numeric", month: "short",  
+    day: "numeric", hour: "2-digit", minute: "2-digit"  
+  };  
+  date.toLocaleTimeString("es-ES", options)
+
+  response.send(`<p>PhoneBook has info for ${persons.length} people</p>
+    <p>${date}</p>`)
+})
+
 
 const PORT = 3001
 app.listen(PORT, () => {
