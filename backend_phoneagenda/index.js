@@ -24,6 +24,8 @@ let persons = [
     }
 ]
 
+app.use(express.json())
+
 app.get('/api/persons',(request,response) => {
     response.json(persons)
 })
@@ -42,11 +44,61 @@ app.get('/info', (request,response) => {
 
 
 app.get('/api/persons/:id',(request,response) => {
-  const person = persons.find(person => person.id === Number(request.params.id))
+  const id = Number(request.params.id)
+  const person = persons.find(person => 
+    person.id === id)
   if(!person){
     return response.status(404).end()
   }
   response.json(person)
+})
+
+app.delete('/api/persons/:id',(request,response) => {
+
+  const id = Number(request.params.id)
+  
+  //Check first that the person exists
+  const person = persons.find(person => 
+    person.id === id)
+  
+  if(!person){
+    return response.status(404).end()
+  }
+
+  //Then if exists we filter
+  persons = persons.filter(person => 
+    person.id !== id)
+
+  response.status(204).end()
+
+})
+
+const generateRandomId = () => {
+  return Math.floor(Math.random() * 1000)
+}
+
+app.post('/api/persons', (request,response) => {
+  if(!request.body.name || !request.body.number){
+    return response.status(400).json({
+      error: 'missing name or number'
+    })
+  }
+
+  if(persons.some(person => person.name === request.body.name)) {
+    return response.status(400).json({
+      error: 'name must be unique'
+    })
+  }
+
+  const newPerson = {
+    id: generateRandomId(),
+    name: request.body.name,
+    number: request.body.number
+  }
+
+  persons = persons.concat(newPerson)
+
+  response.status(201).json(newPerson)
 })
 
 const PORT = 3001
