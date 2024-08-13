@@ -1,4 +1,6 @@
 const express = require('express')
+const morgan = require('morgan')
+
 const app = express()
 
 let persons = [
@@ -26,10 +28,25 @@ let persons = [
 
 app.use(express.json())
 
+// morgan configuration 3.7-3.8
+morgan.token('body', function (request, response) { return JSON.stringify(request.body) })
+
+app.use(morgan('tiny', {
+  skip: function (req, res) { return req.method === 'POST' }
+}))
+
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body', {
+  skip: function (req, res) { 
+    return req.method !== 'POST' 
+  }
+}))
+
+// exercise 3.1
 app.get('/api/persons',(request,response) => {
     response.json(persons)
 })
 
+// exercise 3.2
 app.get('/info', (request,response) => {
   const date = new Date();  
   let options = {  
@@ -42,7 +59,7 @@ app.get('/info', (request,response) => {
     <p>${date}</p>`)
 })
 
-
+// exercise 3.3
 app.get('/api/persons/:id',(request,response) => {
   const id = Number(request.params.id)
   const person = persons.find(person => 
@@ -53,10 +70,10 @@ app.get('/api/persons/:id',(request,response) => {
   response.json(person)
 })
 
+// exercise 3.4
 app.delete('/api/persons/:id',(request,response) => {
-
-  const id = Number(request.params.id)
   
+  const id = Number(request.params.id)
   //Check first that the person exists
   const person = persons.find(person => 
     person.id === id)
@@ -77,6 +94,7 @@ const generateRandomId = () => {
   return Math.floor(Math.random() * 1000)
 }
 
+// exercise 3.5-3.6
 app.post('/api/persons', (request,response) => {
   if(!request.body.name || !request.body.number){
     return response.status(400).json({
