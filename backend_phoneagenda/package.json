@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build:ui": "rm -rf dist && cd ../../fullstackopen/part2/phoneagenda && npm run build && cp -r dist ../../../fullstackopen_part3/backend_phoneagenda",
     "start": "node index.js",
     "dev": "nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1"

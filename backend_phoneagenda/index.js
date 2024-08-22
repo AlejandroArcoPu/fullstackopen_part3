@@ -28,6 +28,8 @@ let persons = [
 
 app.use(express.json())
 
+app.use(express.static('dist'))
+
 // morgan configuration 3.7-3.8
 morgan.token('body', function (request, response) { return JSON.stringify(request.body) })
 
@@ -77,8 +79,8 @@ app.delete('/api/persons/:id',(request,response) => {
   //Check first that the person exists
   const person = persons.find(person => 
     person.id === id)
-  
-  if(!person){
+
+    if(!person){
     return response.status(404).end()
   }
 
@@ -86,7 +88,7 @@ app.delete('/api/persons/:id',(request,response) => {
   persons = persons.filter(person => 
     person.id !== id)
 
-  response.status(204).end()
+    response.status(204).end()
 
 })
 
