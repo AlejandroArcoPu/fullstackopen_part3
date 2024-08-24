@@ -53,27 +53,34 @@ app.get('/api/persons',(request,response) => {
 })
 
 // exercise 3.2
-app.get('/info', (request,response) => {
+app.get('/info', async (request,response) => {
   const date = new Date();  
   let options = {  
     weekday: "long", year: "numeric", month: "short",  
     day: "numeric", hour: "2-digit", minute: "2-digit"  
   };  
   date.toLocaleTimeString("es-ES", options)
-
-  response.send(`<p>PhoneBook has info for ${persons.length} people</p>
-    <p>${date}</p>`)
+  
+  Person.estimatedDocumentCount()
+  .then((count) => {
+    response.send(`<p>PhoneBook has info for ${count} people</p>
+      <p>${date}</p>`)
+  })
 })
 
 // exercise 3.3
 app.get('/api/persons/:id',(request,response) => {
-  const id = Number(request.params.id)
-  const person = persons.find(person => 
-    person.id === id)
-  if(!person){
-    return response.status(404).end()
-  }
-  response.json(person)
+  // const id = Number(request.params.id)
+  // const person = persons.find(person => 
+  //   person.id === id)
+  // if(!person){
+  //   return response.status(404).end()
+  // }
+  // response.json(person)
+  Person.findById(request.params.id)
+  .then(person => 
+    response.json(person)
+  )
 })
 
 // exercise 3.4
@@ -108,21 +115,23 @@ app.post('/api/persons', (request,response) => {
     })
   }
 
-  if(persons.some(person => person.name === request.body.name)) {
-    return response.status(400).json({
-      error: 'name must be unique'
-    })
-  }
+  //Ignore for now
+  // if(persons.some(person => person.name === request.body.name)) {
+  //   return response.status(400).json({
+  //     error: 'name must be unique'
+  //   })
+  // }
 
-  const newPerson = {
-    id: generateRandomId(),
+  const person = new Person({
     name: request.body.name,
     number: request.body.number
-  }
+  })
 
-  persons = persons.concat(newPerson)
-
-  response.status(201).json(newPerson)
+  person.save().then(
+    savedPerson => {
+      response.json(savedPerson)
+    }
+  )
 })
 
 const PORT = process.env.PORT || 3001
