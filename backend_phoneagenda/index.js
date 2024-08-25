@@ -32,6 +32,20 @@ app.use(express.json())
 
 app.use(express.static('dist'))
 
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message)
+  
+  if(error.name === 'CastError'){
+    return response.status(400).send({error: 'malformatted id'})
+  }
+
+  next(error)
+}
+
+const unknownEndpoint = (req,res) => {
+  res.status(404).send({error: 'unknown endpoint'})
+}
+
 // morgan configuration 3.7-3.8
 morgan.token('body', function (request, response) { return JSON.stringify(request.body) })
 
@@ -60,7 +74,7 @@ app.get('/info', async (request,response) => {
     day: "numeric", hour: "2-digit", minute: "2-digit"  
   };  
   date.toLocaleTimeString("es-ES", options)
-  
+
   Person.estimatedDocumentCount()
   .then((count) => {
     response.send(`<p>PhoneBook has info for ${count} people</p>
@@ -69,43 +83,40 @@ app.get('/info', async (request,response) => {
 })
 
 // exercise 3.3
-app.get('/api/persons/:id',(request,response) => {
-  // const id = Number(request.params.id)
-  // const person = persons.find(person => 
-  //   person.id === id)
-  // if(!person){
-  //   return response.status(404).end()
-  // }
-  // response.json(person)
+app.get('/api/persons/:id',(request,response,next) => {
   Person.findById(request.params.id)
   .then(person => 
     response.json(person)
   )
+  .catch((error) => next(error))
 })
 
 // exercise 3.4
-app.delete('/api/persons/:id',(request,response) => {
+app.delete('/api/persons/:id',(request,response,next) => {
   
-  const id = Number(request.params.id)
-  //Check first that the person exists
-  const person = persons.find(person => 
-    person.id === id)
+  // const id = Number(request.params.id)
+  // //Check first that the person exists
+  // const person = persons.find(person => 
+  //   person.id === id)
 
-    if(!person){
-    return response.status(404).end()
-  }
+  //   if(!person){
+  //   return response.status(404).end()
+  // }
 
-  //Then if exists we filter
-  persons = persons.filter(person => 
-    person.id !== id)
+  // //Then if exists we filter
+  // persons = persons.filter(person => 
+  //   person.id !== id)
 
-    response.status(204).end()
+  //   response.status(204).end()
 
+  Person.findByIdAndDelete(request.params.id)
+  .then(person => {
+    if(person) response.status(204).end()
+    else response.status(404).end()
+  })
+  .catch((error) => next(error))
 })
 
-const generateRandomId = () => {
-  return Math.floor(Math.random() * 1000)
-}
 
 // exercise 3.5-3.6
 app.post('/api/persons', (request,response) => {
@@ -133,6 +144,10 @@ app.post('/api/persons', (request,response) => {
     }
   )
 })
+
+app.use(unknownEndpoint)
+
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
